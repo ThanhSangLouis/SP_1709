@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
+  <body>
+    <div th:fragment="content">
+      <!-- Page Header -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h1 class="page-title">
+            <i class="fas fa-tags me-3"></i>
+            Quản lý danh mục
+          </h1>
+          <p class="page-subtitle">
+            Quản lý các danh mục sản phẩm trong hệ thống
+          </p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a th:href="@{/categories/add}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus me-2"></i>
+            Thêm danh mục mới
+          </a>
+        </div>
+      </div>
+
+      <!-- Search and Filter -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <form th:action="@{/categories}" method="get" class="row g-3">
+                <div class="col-md-8">
+                  <div class="input-group input-group-lg">
+                    <span class="input-group-text">
+                      <i class="fas fa-search"></i>
+                    </span>
+                    <input
+                      type="text"
+                      name="keyword"
+                      th:value="${keyword}"
+                      class="form-control"
+                      placeholder="Tìm kiếm danh mục theo tên..."
+                    />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary btn-lg">
+                      <i class="fas fa-search me-2"></i>
+                      Tìm kiếm
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Table -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Danh sách danh mục
+                <span class="badge bg-primary ms-2" th:text="${categories.totalElements}">0</span>
+              </h5>
+              <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportData()">
+                  <i class="fas fa-download me-1"></i>
+                  Xuất Excel
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printTable()">
+                  <i class="fas fa-print me-1"></i>
+                  In
+                </button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th width="80">
+                        <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleSelectAll()">
+                      </th>
+                      <th width="100">ID</th>
+                      <th>Tên danh mục</th>
+                      <th>Hình ảnh</th>
+                      <th width="120">Trạng thái</th>
+                      <th width="200">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="category, iterStat : ${categories}" th:class="'category-row'">
+                      <td>
+                        <input type="checkbox" class="form-check-input category-checkbox" th:value="${category.categoryId}">
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-dark" th:text="${category.categoryId}">1</span>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="category-icon me-3">
+                            <i class="fas fa-folder text-primary"></i>
+                          </div>
+                          <div>
+                            <h6 class="mb-0" th:text="${category.categoryName}">Tên danh mục</h6>
+                            <small class="text-muted">Danh mục sản phẩm</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="category-image" th:if="${category.categoryImage != null and !#strings.isEmpty(category.categoryImage)}">
+                          <img 
+                            th:src="${category.categoryImage}" 
+                            th:alt="${category.categoryName}"
+                            class="img-thumbnail"
+                            style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;"
+                            onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyMEg0MFY0MEgyMFYyMFoiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTI1IDI1SDM1VjM1SDI1VjI1WiIgZmlsbD0iI0QxRDVEQyIvPgo8L3N2Zz4K'"
+                          />
+                        </div>
+                        <div class="no-image" th:unless="${category.categoryImage != null and !#strings.isEmpty(category.categoryImage)}">
+                          <div class="bg-light d-flex align-items-center justify-content-center" 
+                               style="width: 60px; height: 60px; border-radius: 8px;">
+                            <i class="fas fa-image text-muted"></i>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge bg-success">
+                          <i class="fas fa-check-circle me-1"></i>
+                          Hoạt động
+                        </span>
+                      </td>
+                      <td>
+                        <div class="btn-group" role="group">
+                          <a 
+                            th:href="@{/categories/edit/{id}(id=${category.categoryId})}"
+                            class="btn btn-warning btn-sm"
+                            data-bs-toggle="tooltip"
+                            title="Chỉnh sửa"
+                          >
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <a 
+                            th:href="@{/categories/delete/{id}(id=${category.categoryId})}"
+                            class="btn btn-danger btn-sm"
+                            data-bs-toggle="tooltip"
+                            title="Xóa"
+                            onclick="return confirmDelete(this)"
+                          >
+                            <i class="fas fa-trash"></i>
+                          </a>
+                          <button 
+                            type="button"
+                            class="btn btn-info btn-sm"
+                            data-bs-toggle="tooltip"
+                            title="Xem chi tiết"
+                            th:onclick="'viewDetails(' + ${category.categoryId} + ')'"
+                          >
+                            <i class="fas fa-eye"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr th:if="${categories.isEmpty()}">
+                      <td colspan="6" class="text-center py-5">
+                        <div class="empty-state">
+                          <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                          <h5 class="text-muted">Chưa có danh mục nào</h5>
+                          <p class="text-muted">Hãy thêm danh mục đầu tiên để bắt đầu</p>
+                          <a th:href="@{/categories/add}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            Thêm danh mục
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="row mt-4" th:if="${!categories.isEmpty()}">
+        <div class="col-12">
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              <li class="page-item" th:classappend="${categories.first ? 'disabled' : ''}">
+                <a
+                  class="page-link"
+                  th:href="@{/categories(page=${categories.number - 1}, keyword=${keyword})}"
+                  th:if="${!categories.first}"
+                >
+                  <i class="fas fa-chevron-left me-1"></i>
+                  Trước
+                </a>
+                <span class="page-link" th:if="${categories.first}">
+                  <i class="fas fa-chevron-left me-1"></i>
+                  Trước
+                </span>
+              </li>
+              
+              <li 
+                class="page-item"
+                th:each="i : ${#numbers.sequence(0, categories.totalPages - 1)}"
+                th:classappend="${i == categories.number ? 'active' : ''}"
+              >
+                <a
+                  class="page-link"
+                  th:href="@{/categories(page=${i}, keyword=${keyword})}"
+                  th:text="${i + 1}"
+                >1</a>
+              </li>
+              
+              <li class="page-item" th:classappend="${categories.last ? 'disabled' : ''}">
+                <a
+                  class="page-link"
+                  th:href="@{/categories(page=${categories.number + 1}, keyword=${keyword})}"
+                  th:if="${!categories.last}"
+                >
+                  Sau
+                  <i class="fas fa-chevron-right ms-1"></i>
+                </a>
+                <span class="page-link" th:if="${categories.last}">
+                  Sau
+                  <i class="fas fa-chevron-right ms-1"></i>
+                </span>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Bulk Actions -->
+      <div class="row mt-3" th:if="${!categories.isEmpty()}">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <span class="text-muted">
+                    <span id="selectedCount">0</span> danh mục được chọn
+                  </span>
+                </div>
+                <div class="btn-group" role="group">
+                  <button type="button" class="btn btn-outline-danger btn-sm" onclick="bulkDelete()" disabled id="bulkDeleteBtn">
+                    <i class="fas fa-trash me-1"></i>
+                    Xóa đã chọn
+                  </button>
+                  <button type="button" class="btn btn-outline-warning btn-sm" onclick="bulkEdit()" disabled id="bulkEditBtn">
+                    <i class="fas fa-edit me-1"></i>
+                    Chỉnh sửa hàng loạt
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .category-row {
+        transition: all 0.3s ease;
+      }
+
+      .category-row:hover {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(79, 70, 229, 0.05) 100%);
+        transform: scale(1.01);
+      }
+
+      .category-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+      }
+
+      .empty-state {
+        padding: 3rem 1rem;
+      }
+
+      .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+      }
+
+      .btn-group .btn {
+        margin: 0 2px;
+      }
+
+      .badge {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+      }
+
+      .pagination .page-link {
+        border-radius: 8px;
+        margin: 0 2px;
+        border: 1px solid var(--border-color);
+        color: var(--primary-color);
+        font-weight: 500;
+      }
+
+      .pagination .page-item.active .page-link {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .pagination .page-link:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      /* Animation for table rows */
+      .category-row {
+        animation: fadeInUp 0.5s ease forwards;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      .category-row:nth-child(1) { animation-delay: 0.1s; }
+      .category-row:nth-child(2) { animation-delay: 0.2s; }
+      .category-row:nth-child(3) { animation-delay: 0.3s; }
+      .category-row:nth-child(4) { animation-delay: 0.4s; }
+      .category-row:nth-child(5) { animation-delay: 0.5s; }
+
+      @keyframes fadeInUp {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Loading state for images */
+      .category-image img {
+        transition: all 0.3s ease;
+      }
+
+      .category-image img:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .category-info h6 {
+        font-weight: 600;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+      }
+
+      .category-info h6:hover {
+        color: var(--primary-color);
+        transform: translateX(4px);
+      }
+
+      .btn-group .btn {
+        border-radius: 12px;
+        margin: 0 2px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-group .btn:hover {
+        transform: translateY(-2px) scale(1.05);
+      }
+
+      .empty-state {
+        padding: 3rem 2rem;
+        text-align: center;
+      }
+
+      .empty-state i {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-10px);
+        }
+        60% {
+          transform: translateY(-5px);
+        }
+      }
+
+      .search-form .input-group-text {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        border-radius: 16px 0 0 16px;
+      }
+
+      .search-form .form-control {
+        border-radius: 0 16px 16px 0;
+        border-left: none;
+      }
+
+      .search-form .form-control:focus {
+        border-left: none;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+      }
+
+      .pagination .page-link {
+        border-radius: 12px;
+        margin: 0 2px;
+        border: none;
+        color: var(--primary-color);
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .pagination .page-link:hover {
+        background: var(--gradient-primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      }
+
+      .pagination .page-item.active .page-link {
+        background: var(--gradient-primary);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 12px;
+        font-weight: 600;
+      }
+
+      .page-header {
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 800;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .page-subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        font-weight: 400;
+      }
+    </style>
+
+    <script>
+      // Select all functionality
+      function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.category-checkbox');
+        
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = selectAll.checked;
+        });
+        
+        updateBulkActions();
+      }
+
+      // Update bulk action buttons
+      function updateBulkActions() {
+        const selectedCheckboxes = document.querySelectorAll('.category-checkbox:checked');
+        const selectedCount = selectedCheckboxes.length;
+        
+        document.getElementById('selectedCount').textContent = selectedCount;
+        document.getElementById('bulkDeleteBtn').disabled = selectedCount === 0;
+        document.getElementById('bulkEditBtn').disabled = selectedCount === 0;
+      }
+
+      // Add event listeners to checkboxes
+      document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkActions);
+      });
+
+      // Confirm delete
+      function confirmDelete(element) {
+        const categoryName = element.closest('tr').querySelector('h6').textContent;
+        return confirm(`⚠️ Bạn có chắc chắn muốn xóa danh mục "${categoryName}"?\n\nHành động này không thể hoàn tác!`);
+      }
+
+      // Bulk delete
+      function bulkDelete() {
+        const selectedIds = Array.from(document.querySelectorAll('.category-checkbox:checked'))
+          .map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+          alert('Vui lòng chọn ít nhất một danh mục để xóa!');
+          return;
+        }
+        
+        if (confirm(`⚠️ Bạn có chắc chắn muốn xóa ${selectedIds.length} danh mục đã chọn?\n\nHành động này không thể hoàn tác!`)) {
+          // Implement bulk delete logic here
+          console.log('Deleting categories:', selectedIds);
+          alert('Tính năng xóa hàng loạt sẽ được triển khai!');
+        }
+      }
+
+      // Bulk edit
+      function bulkEdit() {
+        const selectedIds = Array.from(document.querySelectorAll('.category-checkbox:checked'))
+          .map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+          alert('Vui lòng chọn ít nhất một danh mục để chỉnh sửa!');
+          return;
+        }
+        
+        console.log('Editing categories:', selectedIds);
+        alert('Tính năng chỉnh sửa hàng loạt sẽ được triển khai!');
+      }
+
+      // View details
+      function viewDetails(categoryId) {
+        // Implement view details modal here
+        console.log('Viewing details for category:', categoryId);
+        alert('Tính năng xem chi tiết sẽ được triển khai!');
+      }
+
+      // Export data
+      function exportData() {
+        alert('Tính năng xuất Excel sẽ được triển khai!');
+      }
+
+      // Print table
+      function printTable() {
+        window.print();
+      }
+
+      // Initialize tooltips
+      document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      });
+
+      // Search functionality with debounce
+      let searchTimeout;
+      document.querySelector('input[name="keyword"]').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          if (this.value.length >= 2 || this.value.length === 0) {
+            this.form.submit();
+          }
+        }, 500);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
+  <body>
+    <div th:fragment="content">
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a th:href="@{/dashboard}">
+              <i class="fas fa-home me-1"></i>
+              Dashboard
+            </a>
+          </li>
+          <li class="breadcrumb-item">
+            <a th:href="@{/categories}">
+              <i class="fas fa-tags me-1"></i>
+              Danh mục
+            </a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            <span th:if="${category.categoryId == null}">
+              <i class="fas fa-plus me-1"></i>
+              Thêm mới
+            </span>
+            <span th:unless="${category.categoryId == null}">
+              <i class="fas fa-edit me-1"></i>
+              Chỉnh sửa
+            </span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Page Header -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="d-flex align-items-center">
+            <div class="page-icon me-3">
+              <i class="fas fa-tags"></i>
+            </div>
+            <div>
+              <h1 class="page-title mb-1">
+                <span th:if="${category.categoryId == null}"
+                  >Thêm danh mục mới</span
+                >
+                <span th:unless="${category.categoryId == null}"
+                  >Chỉnh sửa danh mục</span
+                >
+              </h1>
+              <p class="page-subtitle mb-0">
+                <span th:if="${category.categoryId == null}"
+                  >Tạo danh mục sản phẩm mới trong hệ thống</span
+                >
+                <span th:unless="${category.categoryId == null}"
+                  >Cập nhật thông tin danh mục hiện có</span
+                >
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Card -->
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+          <div class="card form-card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-edit me-2"></i>
+                Thông tin danh mục
+              </h5>
+            </div>
+            <div class="card-body">
+              <form
+                th:action="@{/categories/save}"
+                th:object="${category}"
+                method="post"
+                class="needs-validation"
+                novalidate
+                enctype="multipart/form-data"
+              >
+                <input type="hidden" th:field="*{categoryId}" />
+
+                <!-- Category Name -->
+                <div class="mb-4">
+                  <label for="categoryName" class="form-label required">
+                    <i class="fas fa-tag me-2"></i>
+                    Tên danh mục
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control form-control-lg"
+                    id="categoryName"
+                    th:field="*{categoryName}"
+                    placeholder="Nhập tên danh mục..."
+                    required
+                    maxlength="255"
+                  />
+                  <div class="invalid-feedback">
+                    Vui lòng nhập tên danh mục.
+                  </div>
+                  <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Tên danh mục sẽ hiển thị trên website và trong hệ thống quản
+                    lý
+                  </div>
+                </div>
+
+                <!-- Category Image -->
+                <div class="mb-4">
+                  <label for="categoryImage" class="form-label">
+                    <i class="fas fa-image me-2"></i>
+                    Hình ảnh danh mục
+                  </label>
+
+                  <!-- Current Image Preview -->
+                  <div
+                    th:if="${category.categoryImage != null and !#strings.isEmpty(category.categoryImage)}"
+                    class="mb-3"
+                  >
+                    <label class="form-label text-muted"
+                      >Hình ảnh hiện tại:</label
+                    >
+                    <div class="current-image-preview">
+                      <img
+                        th:src="${category.categoryImage}"
+                        th:alt="${category.categoryName}"
+                        class="img-thumbnail"
+                        style="
+                          max-width: 200px;
+                          max-height: 200px;
+                          object-fit: cover;
+                        "
+                        onerror="this.style.display='none'"
+                      />
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger ms-2"
+                        onclick="removeCurrentImage()"
+                      >
+                        <i class="fas fa-times"></i>
+                        Xóa
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Image URL Input -->
+                  <div class="input-group mb-3">
+                    <span class="input-group-text">
+                      <i class="fas fa-link"></i>
+                    </span>
+                    <input
+                      type="url"
+                      class="form-control"
+                      id="categoryImage"
+                      th:field="*{categoryImage}"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      onclick="previewImage()"
+                    >
+                      <i class="fas fa-eye"></i>
+                      Xem trước
+                    </button>
+                  </div>
+
+                  <!-- Image Preview -->
+                  <div id="imagePreview" class="mt-3" style="display: none">
+                    <label class="form-label text-muted">Xem trước:</label>
+                    <div class="preview-container">
+                      <img
+                        id="previewImg"
+                        class="img-thumbnail"
+                        style="
+                          max-width: 200px;
+                          max-height: 200px;
+                          object-fit: cover;
+                        "
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Nhập URL hình ảnh hoặc để trống nếu không có hình ảnh
+                  </div>
+                </div>
+
+                <!-- Category Description (Optional) -->
+                <div class="mb-4">
+                  <label for="categoryDescription" class="form-label">
+                    <i class="fas fa-align-left me-2"></i>
+                    Mô tả danh mục
+                  </label>
+                  <textarea
+                    class="form-control"
+                    id="categoryDescription"
+                    rows="4"
+                    placeholder="Nhập mô tả chi tiết về danh mục..."
+                    maxlength="1000"
+                  ></textarea>
+                  <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Mô tả sẽ giúp người dùng hiểu rõ hơn về danh mục này
+                  </div>
+                </div>
+
+                <!-- Status -->
+                <div class="mb-4">
+                  <label class="form-label">
+                    <i class="fas fa-toggle-on me-2"></i>
+                    Trạng thái
+                  </label>
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="categoryStatus"
+                      checked
+                    />
+                    <label class="form-check-label" for="categoryStatus">
+                      <span class="status-text">Hoạt động</span>
+                    </label>
+                  </div>
+                  <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Danh mục sẽ hiển thị trên website khi được kích hoạt
+                  </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="row">
+                  <div class="col-md-6">
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                      <i class="fas fa-save me-2"></i>
+                      <span th:if="${category.categoryId == null}"
+                        >Tạo danh mục</span
+                      >
+                      <span th:unless="${category.categoryId == null}"
+                        >Cập nhật danh mục</span
+                      >
+                    </button>
+                  </div>
+                  <div class="col-md-6">
+                    <a
+                      th:href="@{/categories}"
+                      class="btn btn-outline-secondary btn-lg w-100"
+                    >
+                      <i class="fas fa-times me-2"></i>
+                      Hủy bỏ
+                    </a>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help Card -->
+      <div class="row justify-content-center mt-4">
+        <div class="col-lg-8 col-md-10">
+          <div class="card help-card">
+            <div class="card-body">
+              <h6 class="card-title">
+                <i class="fas fa-lightbulb me-2"></i>
+                Mẹo sử dụng
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                      <i class="fas fa-check text-success me-2"></i>
+                      Tên danh mục nên ngắn gọn, dễ hiểu
+                    </li>
+                    <li class="mb-2">
+                      <i class="fas fa-check text-success me-2"></i>
+                      Sử dụng hình ảnh chất lượng cao
+                    </li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                      <i class="fas fa-check text-success me-2"></i>
+                      Mô tả giúp SEO tốt hơn
+                    </li>
+                    <li class="mb-2">
+                      <i class="fas fa-check text-success me-2"></i>
+                      Kiểm tra kỹ trước khi lưu
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .page-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+      }
+
+      .form-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .form-card .card-header {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        color: white;
+        border: none;
+        padding: 1.5rem 2rem;
+      }
+
+      .form-card .card-body {
+        padding: 2.5rem;
+      }
+
+      .help-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+      }
+
+      .required::after {
+        content: " *";
+        color: var(--danger-color);
+        font-weight: bold;
+      }
+
+      .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .form-control-lg {
+        padding: 1rem 1.25rem;
+        font-size: 1.1rem;
+        border-radius: 12px;
+      }
+
+      .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+
+      .current-image-preview {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--light-bg);
+        border-radius: 10px;
+        border: 2px dashed var(--border-color);
+      }
+
+      .preview-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--light-bg);
+        border-radius: 10px;
+        border: 2px dashed var(--primary-color);
+      }
+
+      .status-text {
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .form-text {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+      }
+
+      .btn-lg {
+        padding: 1rem 2rem;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+      }
+
+      .btn-outline-secondary:hover {
+        transform: translateY(-2px);
+      }
+
+      /* Animation for form elements */
+      .form-control {
+        transition: all 0.3s ease;
+      }
+
+      .form-control:focus {
+        transform: translateY(-1px);
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .form-card .card-body {
+          padding: 1.5rem;
+        }
+
+        .page-icon {
+          width: 50px;
+          height: 50px;
+          font-size: 1.2rem;
+        }
+
+        .current-image-preview,
+        .preview-container {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+
+      .page-header {
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 800;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .page-subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        font-weight: 400;
+      }
+
+      .form-group {
+        position: relative;
+        margin-bottom: 2rem;
+      }
+
+      .form-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        font-size: 0.95rem;
+      }
+
+      .form-label i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+      }
+
+      .form-control {
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+      }
+
+      .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        background: white;
+        transform: translateY(-2px);
+      }
+
+      .form-control:invalid {
+        border-color: var(--danger-color);
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+      }
+
+      .form-control:valid {
+        border-color: var(--success-color);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+      }
+
+      .form-text {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .form-text i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+      }
+
+      .image-preview-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .image-preview-wrapper img {
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+      }
+
+      .image-preview-wrapper img:hover {
+        transform: scale(1.05);
+        box-shadow: var(--card-shadow-hover);
+      }
+
+      .category-preview {
+        padding: 2rem;
+        border: 2px dashed var(--border-color);
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(10px);
+      }
+
+      .category-preview:hover {
+        border-color: var(--primary-color);
+        background: rgba(99, 102, 241, 0.05);
+        transform: translateY(-2px);
+      }
+
+      .btn {
+        border-radius: 16px;
+        font-weight: 600;
+        padding: 0.875rem 2rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        text-transform: none;
+        position: relative;
+        overflow: hidden;
+        font-size: 0.95rem;
+        letter-spacing: 0.025em;
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .btn:hover::before {
+        left: 100%;
+      }
+
+      .btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        text-decoration: none;
+      }
+
+      .btn-primary {
+        background: var(--gradient-primary);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        color: white;
+      }
+
+      .btn-success {
+        background: var(--gradient-success);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        color: white;
+      }
+
+      .btn-success:hover {
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        color: white;
+      }
+
+      .btn-warning {
+        background: var(--gradient-warning);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        color: white;
+      }
+
+      .btn-warning:hover {
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        color: white;
+      }
+
+      .btn-danger {
+        background: var(--gradient-danger);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        color: white;
+      }
+
+      .btn-danger:hover {
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        color: white;
+      }
+
+      .btn-outline-secondary {
+        border: 2px solid var(--border-color);
+        color: var(--text-secondary);
+        background: transparent;
+      }
+
+      .btn-outline-secondary:hover {
+        background: var(--text-secondary);
+        color: white;
+        border-color: var(--text-secondary);
+      }
+
+      .btn-outline-primary {
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        background: transparent;
+      }
+
+      .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+      }
+
+      .char-counter {
+        text-align: right;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+      }
+
+      .char-counter.warning {
+        color: var(--warning-color);
+      }
+
+      .char-counter.danger {
+        color: var(--danger-color);
+      }
+
+      .required::after {
+        content: " *";
+        color: var(--danger-color);
+        font-weight: bold;
+      }
+
+      .preview-card {
+        position: sticky;
+        top: 2rem;
+      }
+
+      .preview-card .card {
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .preview-card .card-header {
+        background: var(--gradient-primary);
+        color: white;
+        border-radius: 20px 20px 0 0;
+        padding: 1.5rem;
+        border: none;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .preview-card .card-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          45deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
+    </style>
+
+    <script>
+      // Form validation
+      (function () {
+        "use strict";
+        window.addEventListener(
+          "load",
+          function () {
+            var forms = document.getElementsByClassName("needs-validation");
+            var validation = Array.prototype.filter.call(
+              forms,
+              function (form) {
+                form.addEventListener(
+                  "submit",
+                  function (event) {
+                    if (form.checkValidity() === false) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }
+                    form.classList.add("was-validated");
+                  },
+                  false
+                );
+              }
+            );
+          },
+          false
+        );
+      })();
+
+      // Image preview functionality
+      function previewImage() {
+        const imageUrl = document.getElementById("categoryImage").value;
+        const previewDiv = document.getElementById("imagePreview");
+        const previewImg = document.getElementById("previewImg");
+
+        if (imageUrl && isValidUrl(imageUrl)) {
+          previewImg.src = imageUrl;
+          previewImg.onerror = function () {
+            previewDiv.style.display = "none";
+            alert("Không thể tải hình ảnh từ URL này!");
+          };
+          previewImg.onload = function () {
+            previewDiv.style.display = "block";
+          };
+        } else {
+          previewDiv.style.display = "none";
+          if (imageUrl) {
+            alert("Vui lòng nhập URL hợp lệ!");
+          }
+        }
+      }
+
+      // Check if URL is valid
+      function isValidUrl(string) {
+        try {
+          new URL(string);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      // Remove current image
+      function removeCurrentImage() {
+        if (confirm("Bạn có chắc chắn muốn xóa hình ảnh hiện tại?")) {
+          document.querySelector(".current-image-preview").style.display =
+            "none";
+          document.getElementById("categoryImage").value = "";
+        }
+      }
+
+      // Status toggle
+      document
+        .getElementById("categoryStatus")
+        .addEventListener("change", function () {
+          const statusText = document.querySelector(".status-text");
+          if (this.checked) {
+            statusText.textContent = "Hoạt động";
+            statusText.style.color = "var(--success-color)";
+          } else {
+            statusText.textContent = "Tạm dừng";
+            statusText.style.color = "var(--warning-color)";
+          }
+        });
+
+      // Auto-save draft (optional)
+      let autoSaveTimeout;
+      document.querySelectorAll("input, textarea").forEach((input) => {
+        input.addEventListener("input", function () {
+          clearTimeout(autoSaveTimeout);
+          autoSaveTimeout = setTimeout(() => {
+            // Implement auto-save logic here
+            console.log("Auto-saving draft...");
+          }, 2000);
+        });
+      });
+
+      // Character counter for description
+      const descriptionTextarea = document.getElementById(
+        "categoryDescription"
+      );
+      if (descriptionTextarea) {
+        const maxLength = 1000;
+        const counter = document.createElement("div");
+        counter.className = "form-text text-end";
+        counter.innerHTML = `<span id="charCount">0</span>/${maxLength} ký tự`;
+        descriptionTextarea.parentNode.appendChild(counter);
+
+        descriptionTextarea.addEventListener("input", function () {
+          const charCount = this.value.length;
+          document.getElementById("charCount").textContent = charCount;
+
+          if (charCount > maxLength * 0.9) {
+            counter.style.color = "var(--warning-color)";
+          } else if (charCount > maxLength) {
+            counter.style.color = "var(--danger-color)";
+          } else {
+            counter.style.color = "var(--text-muted)";
+          }
+        });
+      }
+
+      // Form submission with loading state
+      document.querySelector("form").addEventListener("submit", function () {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        submitBtn.innerHTML = '<span class="loading"></span> Đang lưu...';
+        submitBtn.disabled = true;
+
+        // Re-enable after 5 seconds (fallback)
+        setTimeout(() => {
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        }, 5000);
+      });
+
+      // Initialize tooltips
+      document.addEventListener("DOMContentLoaded", function () {
+        const tooltipTriggerList = [].slice.call(
+          document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        );
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      });
+    </script>
+  </body>
+</html>
