@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
+  <body>
+    <div th:fragment="content">
+      <!-- Page Header -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h1 class="page-title">
+            <i class="fas fa-tags me-3"></i>
+            Quản lý danh mục (AJAX)
+          </h1>
+          <p class="text-muted">Quản lý các danh mục sản phẩm với AJAX</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <button
+            type="button"
+            class="btn btn-primary btn-lg"
+            onclick="showAddCategoryModal()"
+          >
+            <i class="fas fa-plus me-2"></i>
+            Thêm danh mục mới
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-search"></i>
+                    </span>
+                    <input
+                      type="text"
+                      id="searchKeyword"
+                      class="form-control"
+                      placeholder="Tìm kiếm danh mục theo tên..."
+                      onkeyup="searchCategories()"
+                    />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="d-grid">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      onclick="searchCategories()"
+                    >
+                      <i class="fas fa-search me-2"></i>
+                      Tìm kiếm
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Table -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div
+              class="card-header d-flex justify-content-between align-items-center"
+            >
+              <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Danh sách danh mục
+                <span class="badge bg-primary ms-2" id="categoryCount">0</span>
+              </h5>
+              <div class="btn-group" role="group">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  onclick="loadCategories()"
+                >
+                  <i class="fas fa-sync-alt me-1"></i>Làm mới
+                </button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th width="100">ID</th>
+                      <th>Tên danh mục</th>
+                      <th>Hình ảnh</th>
+                      <th width="120">Trạng thái</th>
+                      <th width="200">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="categoryTableBody">
+                    <tr>
+                      <td colspan="5" class="text-center py-5">
+                        <div>
+                          <i
+                            class="fas fa-spinner fa-spin fa-2x text-muted mb-3"
+                          ></i>
+                          <h5 class="text-muted">Đang tải dữ liệu...</h5>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div
+      class="modal fade"
+      id="categoryModal"
+      tabindex="-1"
+      aria-labelledby="categoryModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="categoryModalLabel">
+              Thêm danh mục mới
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="categoryForm" enctype="multipart/form-data">
+              <input type="hidden" id="categoryId" name="categoryId" />
+
+              <div class="mb-3">
+                <label for="categoryName" class="form-label required"
+                  >Tên danh mục</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="categoryName"
+                  name="categoryName"
+                  required
+                />
+                <div class="invalid-feedback">Vui lòng nhập tên danh mục.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="categoryImage" class="form-label"
+                  >Hình ảnh danh mục</label
+                >
+                <input
+                  type="file"
+                  class="form-control"
+                  id="categoryImage"
+                  name="icon"
+                  accept="image/*"
+                />
+                <div class="form-text">
+                  Tải lên file ảnh (PNG, JPG) dung lượng tối đa 5MB.
+                </div>
+              </div>
+
+              <div id="currentImagePreview" class="mb-3" style="display: none">
+                <label class="form-label text-muted">Hình ảnh hiện tại:</label>
+                <div class="d-flex align-items-center gap-3">
+                  <img
+                    id="currentImage"
+                    class="img-thumbnail"
+                    style="
+                      max-width: 200px;
+                      max-height: 200px;
+                      object-fit: cover;
+                    "
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    onclick="removeCurrentImage()"
+                  >
+                    <i class="fas fa-times"></i> Xóa ảnh
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="saveCategory()"
+            >
+              <span
+                class="spinner-border spinner-border-sm d-none"
+                id="saveSpinner"
+              ></span>
+              <span id="saveText">Lưu</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let categories = [];
+      let isEditMode = false;
+
+      // Load categories on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        loadCategories();
+      });
+
+      async function loadCategories() {
+        try {
+          const response = await CategoryAjax.getAll();
+          if (response.success) {
+            categories = response.data;
+            updateCategoryTable();
+            updateCategoryCount();
+          } else {
+            ajax.showNotification(
+              "Lỗi khi tải danh sách danh mục: " + response.message,
+              "error"
+            );
+          }
+        } catch (error) {
+          ajax.showNotification(
+            "Lỗi khi tải danh sách danh mục: " + error.message,
+            "error"
+          );
+        }
+      }
+
+      function updateCategoryTable() {
+        TableManager.updateTable(
+          "categoryTableBody",
+          categories,
+          TableManager.createCategoryRow
+        );
+      }
+
+      function updateCategoryCount() {
+        document.getElementById("categoryCount").textContent =
+          categories.length;
+      }
+
+      function searchCategories() {
+        const keyword = document
+          .getElementById("searchKeyword")
+          .value.toLowerCase();
+        const filteredCategories = categories.filter((category) =>
+          category.categoryName.toLowerCase().includes(keyword)
+        );
+        TableManager.updateTable(
+          "categoryTableBody",
+          filteredCategories,
+          TableManager.createCategoryRow
+        );
+        document.getElementById("categoryCount").textContent =
+          filteredCategories.length;
+      }
+
+      function showAddCategoryModal() {
+        isEditMode = false;
+        document.getElementById("categoryModalLabel").textContent =
+          "Thêm danh mục mới";
+        document.getElementById("categoryForm").reset();
+        document.getElementById("currentImagePreview").style.display = "none";
+        new bootstrap.Modal(document.getElementById("categoryModal")).show();
+      }
+
+      async function editCategory(categoryId) {
+        try {
+          const response = await CategoryAjax.getById(categoryId);
+          if (response.success) {
+            const category = response.data;
+            isEditMode = true;
+
+            document.getElementById("categoryModalLabel").textContent =
+              "Chỉnh sửa danh mục";
+            document.getElementById("categoryId").value = category.categoryId;
+            document.getElementById("categoryName").value =
+              category.categoryName;
+
+            if (category.categoryImage) {
+              document.getElementById("currentImage").src =
+                category.categoryImage;
+              document.getElementById("currentImagePreview").style.display =
+                "block";
+            } else {
+              document.getElementById("currentImagePreview").style.display =
+                "none";
+            }
+
+            new bootstrap.Modal(
+              document.getElementById("categoryModal")
+            ).show();
+          } else {
+            ajax.showNotification(
+              "Lỗi khi tải thông tin danh mục: " + response.message,
+              "error"
+            );
+          }
+        } catch (error) {
+          ajax.showNotification(
+            "Lỗi khi tải thông tin danh mục: " + error.message,
+            "error"
+          );
+        }
+      }
+
+      async function saveCategory() {
+        const form = document.getElementById("categoryForm");
+        const formData = new FormData(form);
+
+        if (!form.checkValidity()) {
+          form.classList.add("was-validated");
+          return;
+        }
+
+        const saveButton = document.querySelector(
+          "#categoryModal .btn-primary"
+        );
+        ajax.showLoading(saveButton);
+
+        try {
+          let response;
+          if (isEditMode) {
+            response = await CategoryAjax.update(
+              formData.get("categoryId"),
+              formData.get("categoryName"),
+              formData.get("icon")
+            );
+          } else {
+            response = await CategoryAjax.add(
+              formData.get("categoryName"),
+              formData.get("icon")
+            );
+          }
+
+          if (response.success) {
+            ajax.showNotification(response.message, "success");
+            bootstrap.Modal.getInstance(
+              document.getElementById("categoryModal")
+            ).hide();
+            loadCategories();
+          } else {
+            ajax.showNotification(response.message, "error");
+          }
+        } catch (error) {
+          ajax.showNotification(
+            "Lỗi khi lưu danh mục: " + error.message,
+            "error"
+          );
+        } finally {
+          ajax.hideLoading(saveButton);
+        }
+      }
+
+      async function deleteCategory(categoryId) {
+        if (!confirm("Bạn có chắc chắn muốn xóa danh mục này?")) {
+          return;
+        }
+
+        try {
+          const response = await CategoryAjax.delete(categoryId);
+          if (response.success) {
+            ajax.showNotification(response.message, "success");
+            loadCategories();
+          } else {
+            ajax.showNotification(response.message, "error");
+          }
+        } catch (error) {
+          ajax.showNotification(
+            "Lỗi khi xóa danh mục: " + error.message,
+            "error"
+          );
+        }
+      }
+
+      function removeCurrentImage() {
+        document.getElementById("currentImagePreview").style.display = "none";
+        document.getElementById("categoryImage").value = "";
+      }
+    </script>
+  </body>
+</html>

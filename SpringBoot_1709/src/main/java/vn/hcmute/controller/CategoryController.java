@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.web.csrf.CsrfToken;
+import jakarta.servlet.http.HttpServletRequest;
 
 import vn.hcmute.entity.Category;
 import vn.hcmute.service.CategoryService;
@@ -31,6 +33,11 @@ public class CategoryController {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @ModelAttribute("_csrf")
+    public CsrfToken csrfToken(HttpServletRequest request) {
+        return (CsrfToken) request.getAttribute("_csrf");
+    }
 
     @GetMapping
     public String list(@RequestParam(defaultValue = "0") int page,

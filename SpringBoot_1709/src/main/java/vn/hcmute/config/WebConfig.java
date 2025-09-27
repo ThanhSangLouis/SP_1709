@@ -26,9 +26,20 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Handle uploads directory
         String location = this.uploadRoot.toUri().toString();
         registry
             .addResourceHandler("/uploads/**")
             .addResourceLocations(location);
+        
+        // Handle static resources
+        registry
+            .addResourceHandler("/static/**")
+            .addResourceLocations("classpath:/static/");
+        
+        // Handle favicon
+        registry
+            .addResourceHandler("/favicon.ico")
+            .addResourceLocations("classpath:/static/images/");
     }
 }

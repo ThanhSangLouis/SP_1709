@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
+  <body>
+    <div th:fragment="content">
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a th:href="@{/dashboard}">
+              <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+          </li>
+          <li class="breadcrumb-item">
+            <a th:href="@{/products}">
+              <i class="fas fa-box me-1"></i>Sản phẩm
+            </a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            <span th:if="${!isEdit}">
+              <i class="fas fa-plus me-1"></i>Thêm mới
+            </span>
+            <span th:unless="${!isEdit}">
+              <i class="fas fa-edit me-1"></i>Chỉnh sửa
+            </span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Header -->
+      <div class="row mb-4">
+        <div class="col-12 d-flex align-items-center">
+          <div class="page-icon me-3"><i class="fas fa-box"></i></div>
+          <div>
+            <h1 class="page-title mb-1">
+              <span th:if="${!isEdit}">Thêm sản phẩm mới</span>
+              <span th:unless="${!isEdit}">Chỉnh sửa sản phẩm</span>
+            </h1>
+            <p class="page-subtitle mb-0">
+              <span th:if="${!isEdit}">Tạo sản phẩm mới trong hệ thống</span>
+              <span th:unless="${!isEdit}"
+                >Cập nhật thông tin sản phẩm hiện có</span
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Card -->
+      <div class="row justify-content-center">
+        <div class="col-lg-10 col-md-12">
+          <div class="card form-card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-edit me-2"></i>Thông tin sản phẩm
+              </h5>
+            </div>
+            <div class="card-body">
+              <form
+                th:action="@{/products/save}"
+                th:object="${product}"
+                method="post"
+                class="needs-validation"
+                novalidate
+                enctype="multipart/form-data"
+              >
+                <input type="hidden" th:field="*{productId}" />
+
+                <div class="row">
+                  <!-- Left Column -->
+                  <div class="col-md-8">
+                    <!-- Product Name -->
+                    <div class="mb-4">
+                      <label for="productName" class="form-label required">
+                        <i class="fas fa-tag me-2"></i>Tên sản phẩm
+                      </label>
+                      <input
+                        type="text"
+                        class="form-control form-control-lg"
+                        id="productName"
+                        th:field="*{productName}"
+                        placeholder="Nhập tên sản phẩm..."
+                        required
+                        maxlength="255"
+                      />
+                      <div class="invalid-feedback">
+                        Vui lòng nhập tên sản phẩm.
+                      </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                      <label for="description" class="form-label">
+                        <i class="fas fa-align-left me-2"></i>Mô tả sản phẩm
+                      </label>
+                      <textarea
+                        class="form-control"
+                        id="description"
+                        rows="4"
+                        th:field="*{description}"
+                        placeholder="Nhập mô tả chi tiết về sản phẩm..."
+                        maxlength="1000"
+                      ></textarea>
+                    </div>
+
+                    <!-- Price and Stock -->
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="mb-4">
+                          <label for="price" class="form-label required">
+                            <i class="fas fa-dollar-sign me-2"></i>Giá sản phẩm
+                            (₫)
+                          </label>
+                          <input
+                            type="number"
+                            class="form-control"
+                            id="price"
+                            th:field="*{price}"
+                            placeholder="0"
+                            required
+                            min="0"
+                            step="1000"
+                          />
+                          <div class="invalid-feedback">
+                            Vui lòng nhập giá sản phẩm.
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-4">
+                          <label
+                            for="stockQuantity"
+                            class="form-label required"
+                          >
+                            <i class="fas fa-warehouse me-2"></i>Số lượng tồn
+                            kho
+                          </label>
+                          <input
+                            type="number"
+                            class="form-control"
+                            id="stockQuantity"
+                            th:field="*{stockQuantity}"
+                            placeholder="0"
+                            required
+                            min="0"
+                          />
+                          <div class="invalid-feedback">
+                            Vui lòng nhập số lượng tồn kho.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="mb-4">
+                      <label for="category" class="form-label required">
+                        <i class="fas fa-folder me-2"></i>Danh mục
+                      </label>
+                      <select
+                        class="form-select"
+                        id="category"
+                        th:field="*{category}"
+                        required
+                      >
+                        <option value="">Chọn danh mục...</option>
+                        <option
+                          th:each="cat : ${categories}"
+                          th:value="${cat.categoryId}"
+                          th:text="${cat.categoryName}"
+                        ></option>
+                      </select>
+                      <div class="invalid-feedback">
+                        Vui lòng chọn danh mục.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Right Column -->
+                  <div class="col-md-4">
+                    <!-- Product Image -->
+                    <div class="mb-4">
+                      <label class="form-label">
+                        <i class="fas fa-image me-2"></i>Hình ảnh sản phẩm
+                      </label>
+
+                      <input
+                        type="hidden"
+                        name="existingImage"
+                        th:value="${product.productImage}"
+                      />
+                      <input
+                        type="hidden"
+                        name="removeImage"
+                        id="removeImage"
+                        value="false"
+                      />
+
+                      <!-- Current Image Preview -->
+                      <div
+                        th:if="${product.productImage != null and !#strings.isEmpty(product.productImage)}"
+                        class="mb-3 current-image-preview"
+                      >
+                        <label class="form-label text-muted"
+                          >Hình ảnh hiện tại:</label
+                        >
+                        <div
+                          class="d-flex flex-column align-items-center gap-2"
+                        >
+                          <img
+                            th:src="${product.productImage}"
+                            th:alt="${product.productName}"
+                            class="img-thumbnail"
+                            style="
+                              max-width: 200px;
+                              max-height: 200px;
+                              object-fit: cover;
+                            "
+                          />
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            onclick="markImageForRemoval()"
+                          >
+                            <i class="fas fa-times"></i> Xóa ảnh
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- File chooser -->
+                      <div class="input-group">
+                        <input
+                          type="file"
+                          class="form-control"
+                          id="productImageFile"
+                          name="imageFile"
+                          accept="image/*"
+                          onchange="previewSelectedImage(event)"
+                        />
+                        <label class="input-group-text" for="productImageFile">
+                          <i class="fas fa-upload me-2"></i>Chọn ảnh
+                        </label>
+                      </div>
+
+                      <!-- New image preview -->
+                      <div id="imagePreview" class="mt-3" style="display: none">
+                        <label class="form-label text-muted"
+                          >Xem trước ảnh mới:</label
+                        >
+                        <div
+                          class="d-flex flex-column align-items-center gap-2"
+                        >
+                          <img
+                            id="previewImg"
+                            class="img-thumbnail"
+                            style="
+                              max-width: 200px;
+                              max-height: 200px;
+                              object-fit: cover;
+                            "
+                          />
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            onclick="clearSelectedImage()"
+                          >
+                            <i class="fas fa-undo"></i> Hủy ảnh mới
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>Tải lên file ảnh
+                        (PNG, JPG) dung lượng tối đa 5MB.
+                      </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="mb-4">
+                      <label class="form-label">
+                        <i class="fas fa-toggle-on me-2"></i>Trạng thái
+                      </label>
+                      <div class="form-check form-switch">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          id="productStatus"
+                          th:checked="${product.status != null && product.status.name() == 'ACTIVE'}"
+                        />
+                        <label class="form-check-label" for="productStatus">
+                          <span class="status-text">Hoạt động</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="card bg-light">
+                      <div class="card-body">
+                        <h6 class="card-title">
+                          <i class="fas fa-info-circle me-2"></i>Thông tin bổ
+                          sung
+                        </h6>
+                        <div class="small text-muted">
+                          <div th:if="${isEdit}">
+                            <div>
+                              <strong>Ngày tạo:</strong>
+                              <span
+                                th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy HH:mm')}"
+                                >-</span
+                              >
+                            </div>
+                            <div th:if="${product.updatedAt != null}">
+                              <strong>Ngày cập nhật:</strong>
+                              <span
+                                th:text="${#temporals.format(product.updatedAt, 'dd/MM/yyyy HH:mm')}"
+                                >-</span
+                              >
+                            </div>
+                          </div>
+                          <div th:unless="${isEdit}">
+                            <div>
+                              Sản phẩm sẽ được tạo với trạng thái "Hoạt động"
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex gap-2 mt-4">
+                  <a th:href="@{/products}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                  </a>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Lưu sản phẩm
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        .form-card .card-header {
+          background: rgba(99, 102, 241, 0.1);
+        }
+        .page-title {
+          font-weight: 700;
+        }
+        .required::after {
+          content: "*";
+          color: #ef4444;
+          margin-left: 4px;
+        }
+        .page-icon {
+          width: 60px;
+          height: 60px;
+          background: var(--primary-color);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 1.5rem;
+        }
+      </style>
+
+      <script>
+        // Image preview functions
+        const imagePreview = document.getElementById("imagePreview");
+        const previewImg = document.getElementById("previewImg");
+        const removeImageField = document.getElementById("removeImage");
+        const productImageFile = document.getElementById("productImageFile");
+
+        function previewSelectedImage(event) {
+          const file = event.target.files[0];
+          if (!file) {
+            if (imagePreview) imagePreview.style.display = "none";
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            if (previewImg && imagePreview) {
+              previewImg.src = e.target.result;
+              imagePreview.style.display = "block";
+            }
+          };
+          reader.readAsDataURL(file);
+          if (removeImageField) removeImageField.value = "false";
+        }
+
+        function clearSelectedImage() {
+          if (productImageFile) productImageFile.value = "";
+          if (imagePreview) imagePreview.style.display = "none";
+        }
+
+        function markImageForRemoval() {
+          if (removeImageField) removeImageField.value = "true";
+          if (productImageFile) productImageFile.value = "";
+          const currentPreview = document.querySelector(
+            ".current-image-preview"
+          );
+          if (currentPreview) currentPreview.style.display = "none";
+          if (imagePreview) imagePreview.style.display = "none";
+        }
+
+        // Status toggle
+        document
+          .getElementById("productStatus")
+          .addEventListener("change", function () {
+            const statusText = document.querySelector(".status-text");
+            if (this.checked) {
+              statusText.textContent = "Hoạt động";
+              statusText.style.color = "var(--success-color)";
+            } else {
+              statusText.textContent = "Tạm dừng";
+              statusText.style.color = "var(--warning-color)";
+            }
+          });
+
+        // Form validation
+        (function () {
+          "use strict";
+          window.addEventListener(
+            "load",
+            function () {
+              var forms = document.getElementsByClassName("needs-validation");
+              var validation = Array.prototype.filter.call(
+                forms,
+                function (form) {
+                  form.addEventListener(
+                    "submit",
+                    function (event) {
+                      if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }
+                      form.classList.add("was-validated");
+                    },
+                    false
+                  );
+                }
+              );
+            },
+            false
+          );
+        })();
+      </script>
+    </div>
+  </body>
+</html>
